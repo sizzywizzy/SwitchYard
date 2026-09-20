@@ -1,0 +1,13 @@
+# LF in the repo, always. This project is edited on Windows but runs on Linux
+# (Docker, CI, the Oracle box). A shell script committed with CRLF endings fails
+# there with "bad interpreter" — a classic and confusing bug. This prevents it.
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binaries — never normalised
+*.jar binary
+*.png binary
+*.gif binary

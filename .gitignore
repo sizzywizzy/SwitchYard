@@ -1,0 +1,35 @@
+# Build output
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# JVM crash dumps and heap dumps
+hs_err_pid*.log
+*.hprof
+
+# Logs
+*.log
+logs/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local secrets and environment — never committed
+.env
+*.pem
+*.key
+
+# Raw benchmark dumps. Summaries go in BENCHMARKS.md, not the raw output.
+bench/results/
