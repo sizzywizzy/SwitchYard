@@ -78,3 +78,6 @@ Format: a dated heading, then whatever happened. Terse is fine. Honest is mandat
   extracting, and computing the hash would mean a second 9 MB download just for
   that. HTTPS from Apache's own repo is adequate for a solo project. Revisit if
   anyone else ever builds this.
+- CI green on the first run — JDK 21 on Ubuntu, 19 s wall time including
+  Maven and dependency downloads (no cache yet; `cache: maven` warms it from
+  here). https://github.com/sizzywizzy/SwitchYard/actions/runs/40191605299

@@ -51,10 +51,13 @@ Roadmap: `docs/roadmap.md`. Decisions and reasoning: `docs/design.md`.
 | `backends/` | *(not yet)* the tiny test backends that return their own name |
 | `grafana/` | *(not yet)* committed dashboard JSON |
 
-## Environment (as of 2026-09-20)
+## Environment (as of 2026-10-25)
 
 - Windows 11, Git Bash available. Git 2.49, Docker 29.5, Compose v5.1 — fine.
-- JDK on PATH is **11**, but a full **JDK 24.0.2** exists at
-  `C:/Program Files/Java/jdk-24` (not on PATH, `JAVA_HOME` unset). Use that.
-  Maven is **not installed**. Both must be sorted before the first line of
-  Java (see NOTES.md). Build targets `--release 21`; never write against 11.
+- JDK on PATH is still **11**; the build uses **JDK 24.0.2** at
+  `C:/Program Files/Java/jdk-24`. Set `JAVA_HOME` to it for every build.
+  Git Bash: `JAVA_HOME="/c/Program Files/Java/jdk-24" ./mvnw verify`.
+  PowerShell: `.\mvnw.cmd verify` once `JAVA_HOME` is set as a user variable.
+- Maven is **not installed globally** and shouldn't be: the committed wrapper
+  runs Maven 3.9.16 from `~/.m2/wrapper`. Build targets `--release 21`;
+  never write against 11.

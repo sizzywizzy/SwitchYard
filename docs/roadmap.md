@@ -19,7 +19,7 @@ Ugly on purpose — it's the baseline everything later gets measured against.
 - [ ] Bytes forwarded to one hardcoded backend and the response copied back
 - [ ] Three tiny backends that return their own name and honour `?delay=`
 - [ ] Oracle Cloud A1 instance provisioned — or a fallback chosen if out of capacity
-- [ ] GitHub Actions: build + tests on every push, green
+- [x] GitHub Actions: build + tests on every push, green (first run green 2026-10-25)
 
 **Milestone:** `curl localhost:8080` returns "hello from backend-1", CI is green,
 the Oracle box exists.
