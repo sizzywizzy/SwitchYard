@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The Maven build for Switchyard.
+
+  Maven is convention-driven. It already knows that sources live in
+  src/main/java, tests in src/test/java, and that output goes to target/.
+  This file states only what it cannot guess: who we are, which Java we
+  compile for, which libraries we use, and which plugin versions to pin.
+
+  Useful commands (always via the wrapper, never a global mvn):
+    ./mvnw verify            compile, test, package the jar
+    ./mvnw test              just the tests
+    ./mvnw -q exec:java      (later) run the balancer
+    java -jar target/switchyard-0.1.0-SNAPSHOT.jar
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- Coordinates. Every Maven artifact in the world is identified by
+       groupId:artifactId:version. groupId follows the reverse-domain
+       convention; io.github.<user> is the standard namespace when you
+       don't own a domain. -SNAPSHOT means "unreleased, still changing". -->
+  <groupId>io.github.sizzywizzy</groupId>
+  <artifactId>switchyard</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>Switchyard</name>
+  <description>Layer 7 HTTP load balancer written from scratch in Java</description>
+
+  <properties>
+    <!-- Compile for Java 21 bytecode and the Java 21 API, whatever JDK is
+         actually installed. The laptop runs 24, CI runs 21. `release` (rather
+         than the older source/target pair) also makes javac refuse any API
+         that didn't exist in 21, so a 24-only method can't slip in. -->
+    <maven.compiler.release>21</maven.compiler.release>
+
+    <!-- Without this Maven uses the OS default encoding, which differs between
+         Windows and Linux. A non-ASCII character in a string literal would
+         then compile differently on the laptop and in CI. -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <!-- Dependency versions live here so each is changed in exactly one place. -->
+    <junit.version>5.14.4</junit.version>
+  </properties>
+
+  <dependencies>
+    <!-- The only dependency for now. junit-jupiter is an aggregator that pulls
+         in the API, the parameterised-test support and the engine together.
+         scope=test keeps it off the runtime classpath and out of the jar. -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Plugin versions are pinned on purpose. Left unpinned, Maven picks a
+           default that changes with the Maven version, and "works on my
+           machine, fails in CI" follows. Versions checked against Maven
+           Central on 2026-10-25 (latest stable 3.x line in each case). -->
+
+      <!-- Turns src/main/java into target/classes, honouring
+           maven.compiler.release above. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.16.0</version>
+      </plugin>
+
+      <!-- Runs the tests during the `test` phase. A 3.x version is needed
+           for JUnit 5 to be detected at all; older ones silently run nothing
+           and report success — the single most common "my tests pass" lie. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.6.0</version>
+      </plugin>
+
+      <!-- Builds target/switchyard-0.1.0-SNAPSHOT.jar during `package` and
+           stamps the entry point into its manifest, so `java -jar` works
+           without naming the class. Docker (week 2) will rely on this. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.5.1</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>io.github.sizzywizzy.switchyard.Main</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

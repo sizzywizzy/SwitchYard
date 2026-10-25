@@ -1,5 +1,7 @@
 # Switchyard
 
+[![CI](https://github.com/sizzywizzy/SwitchYard/actions/workflows/ci.yml/badge.svg)](https://github.com/sizzywizzy/SwitchYard/actions/workflows/ci.yml)
+
 A Layer 7 HTTP load balancer, written from scratch in Java.
 
 > **Status: day 0.** Repository skeleton only — no code yet. The plan is in

@@ -1,0 +1,41 @@
+# Continuous integration: every push and pull request compiles, tests and
+# packages the project on a clean Linux machine.
+#
+# Why it exists from the first commit: a green badge backed by a real test
+# suite signals professional habits more cheaply than any feature, and it
+# catches "works on my machine" the moment it happens rather than at deploy.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Least privilege: this workflow only needs to read the repo. The default token
+# can do far more, and a workflow that never needs it shouldn't hold it.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+
+      # JDK 21 here, deliberately, while the laptop runs 24. The build targets
+      # --release 21; this run is the proof that the claim holds on every push.
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven            # keeps ~/.m2 between runs, keyed on pom.xml
+
+      # The committed wrapper (./mvnw) downloads the exact Maven version pinned
+      # in .mvn/wrapper/maven-wrapper.properties, so CI and the laptop run
+      # identical Maven.
+      #   -B                      batch mode: no colour codes or progress bars
+      #   --no-transfer-progress  don't log every jar as it downloads
+      #   verify                  compile -> test -> package -> integration checks
+      - name: Build and test
+        run: ./mvnw -B --no-transfer-progress verify

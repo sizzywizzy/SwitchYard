@@ -13,7 +13,8 @@ Tick a milestone only when it has been *observed*, not when the code compiles.
 Blocking, one thread per connection, one hardcoded backend, bytes copied across.
 Ugly on purpose — it's the baseline everything later gets measured against.
 
-- [ ] JDK 24 on PATH + `JAVA_HOME`; Maven installed; wrapper generated; `pom.xml` written and explained
+- [x] Maven via the committed wrapper (3.9.16); `pom.xml` written and explained; `./mvnw verify` green locally (2026-10-25)
+- [ ] `JAVA_HOME` → jdk-24 set in your own shell (the wrapper needs it; `java` on PATH is still 11)
 - [ ] `ServerSocket` accepts a connection; the request is printed as raw text
 - [ ] Bytes forwarded to one hardcoded backend and the response copied back
 - [ ] Three tiny backends that return their own name and honour `?delay=`

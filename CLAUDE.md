@@ -43,7 +43,10 @@ Roadmap: `docs/roadmap.md`. Decisions and reasoning: `docs/design.md`.
 | `BENCHMARKS.md` | Methodology and topology first, then numbers, then the breaking point |
 | `FAILURE_MODES.md` | What breaks, how it's detected, how the system behaves while broken |
 | `NOTES.md` | Running engineering log, chronological, append-only |
-| `src/` | *(not yet)* Java sources, standard Maven layout |
+| `pom.xml` | The build. Every block is commented in place; targets `--release 21` |
+| `src/main/java/io/github/sizzywizzy/switchyard/` | Java sources. Root package `io.github.sizzywizzy.switchyard` |
+| `src/test/java/...` | JUnit 5 tests, same package layout |
+| `.github/workflows/ci.yml` | CI: JDK 21 on Ubuntu, `./mvnw verify` on every push |
 | `config/` | *(not yet)* `switchyard.yaml` — pools, algorithm, timeouts |
 | `backends/` | *(not yet)* the tiny test backends that return their own name |
 | `grafana/` | *(not yet)* committed dashboard JSON |
