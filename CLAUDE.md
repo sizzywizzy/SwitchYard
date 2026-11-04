@@ -21,6 +21,8 @@ Roadmap: `docs/roadmap.md`. Decisions and reasoning: `docs/design.md`.
   file and notes outrank the next feature.
 - **`NOTES.md` is written as things happen**, never reconstructed. Every bug
   fought, every surprise. That's where interview stories come from.
+- **Only the user commits and pushes.** Claude edits files and runs builds; it
+  never runs `git commit` or `git push`. Every commit is the user's, in their words.
 
 ## Locked decisions (reasoning in docs/design.md)
 

@@ -4,9 +4,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class Main {
 
@@ -16,14 +19,16 @@ public final class Main {
 
         while (true) {
             Socket client = server.accept();            // wait here until someone connects
-            Thread worker=new Thread(() -> {
+
+            Thread worker = new Thread(() -> {          // a thread whose only job is this one client
                 try {
                     handle(client);
-                } catch (IOException e) {
-                    System.err.println("client "+ client.getPort()+ " failed: "+e);
+                } catch (IOException e) {               // a Runnable can't throw it, so it's caught here
+                    System.err.println("client " + client.getPort() + " failed: " + e);
                 }
-            }, "client-"+client.getPort());
-            worker.start(); 
+            }, "client-" + client.getPort());           // named, so jstack shows which thread is which
+
+            worker.start();                             // start() — not run() — then straight back to accept()
         }
     }
 
@@ -34,24 +39,52 @@ public final class Main {
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(client.getInputStream(), StandardCharsets.ISO_8859_1));
 
-            // Read the request head line by line and stop at the BLANK line.
-            // Not at end-of-stream: the client is holding the connection open
-            // waiting for our reply, so end-of-stream never comes.
+            // Collect the request head instead of printing it: we have to send it on.
+            // Stop at the BLANK line, not at end-of-stream — the client is holding the
+            // connection open waiting for our reply, so end-of-stream never comes.
+            List<String> head = new ArrayList<>();
             String line;
             while ((line = in.readLine()) != null && !line.isEmpty()) {
-                System.out.println(line);
+                head.add(line);
             }
+            if (head.isEmpty()) {
+                return;                                 // connected, then hung up
+            }
+            System.out.println(Thread.currentThread().getName() + ": " + head.get(0));
 
-            String body = "hello from switchyard\n";
-            String response = "HTTP/1.1 200 OK\r\n"
-                    + "Content-Length: " + body.length() + "\r\n"   // how many body bytes to expect
-                    + "Connection: close\r\n"                        // we hang up after this
-                    + "\r\n"                                         // blank line ends the headers
-                    + body;
+            // The other direction: now WE are the client, and the backend is the server.
+            try (Socket backend = new Socket("localhost", 9001)) {
 
-            OutputStream out = client.getOutputStream();
-            out.write(response.getBytes(StandardCharsets.ISO_8859_1));
-            out.flush();
+                // Rebuild the request line by line. The added Connection: close makes the
+                // backend hang up after replying — so on THIS leg, end-of-stream is a real
+                // signal, and transferTo below knows when to stop.
+                StringBuilder request = new StringBuilder();
+                for (String h : head) {
+                    request.append(h).append("\r\n");
+                }
+                request.append("Connection: close\r\n");
+                request.append("\r\n");
+
+                OutputStream toBackend = backend.getOutputStream();
+                toBackend.write(request.toString().getBytes(StandardCharsets.ISO_8859_1));
+                toBackend.flush();
+
+                // Copy the reply back to the client byte for byte — status line, headers,
+                // body, whatever it is — until the backend closes its side.
+                backend.getInputStream().transferTo(client.getOutputStream());
+                client.getOutputStream().flush();
+
+            } catch (ConnectException e) {
+                // Nothing listening on 9001. Say so, instead of closing in silence.
+                String body = "backend unavailable\n";
+                String response = "HTTP/1.1 502 Bad Gateway\r\n"
+                        + "Content-Length: " + body.length() + "\r\n"
+                        + "Connection: close\r\n"
+                        + "\r\n"
+                        + body;
+                client.getOutputStream().write(response.getBytes(StandardCharsets.ISO_8859_1));
+                client.getOutputStream().flush();
+            }
         }
     }
 }
