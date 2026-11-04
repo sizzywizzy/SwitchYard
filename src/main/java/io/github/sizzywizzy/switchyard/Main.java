@@ -16,7 +16,14 @@ public final class Main {
 
         while (true) {
             Socket client = server.accept();            // wait here until someone connects
-            handle(client);                             // deal with them fully, then loop
+            Thread worker=new Thread(() -> {
+                try {
+                    handle(client);
+                } catch (IOException e) {
+                    System.err.println("client "+ client.getPort()+ " failed: "+e);
+                }
+            }, "client-"+client.getPort());
+            worker.start(); 
         }
     }
 
