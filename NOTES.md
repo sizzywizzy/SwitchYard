@@ -81,3 +81,47 @@ Format: a dated heading, then whatever happened. Terse is fine. Honest is mandat
 - CI green on the first run — JDK 21 on Ubuntu, 19 s wall time including
   Maven and dependency downloads (no cache yet; `cache: maven` warms it from
   here). https://github.com/sizzywizzy/SwitchYard/actions/runs/40191605299
+
+## 2026-11-05 — Week 1: listener → threads → proxy → bodies
+
+Four steps, each committed separately (`902ff92` listener, `af16ace` thread per
+connection, `26dac2e` forwarding + `Backend`; step 4 — bodies — committed after
+this entry). What was actually seen, in order:
+
+- **The raw request, by hand.** `curl -v localhost:8080` and the server printed the
+  same four lines curl showed with `>`. HTTP stopped being abstract.
+- **One stream object, bytes only — the bug of the week.** First proxy version read
+  the head with a `BufferedReader`. `curl -d "abc"` returned `200` and the backend
+  never saw `abc`. No error anywhere; the reader had slurped the body into its
+  private buffer and the raw stream had nothing left. Worse than a crash because
+  it looked like success. Fix: `Http.readHead` reads one byte at a time off a
+  `BufferedInputStream` and stops exactly at `\r\n\r\n`; `readNBytes(Content-Length)`
+  takes the body from the *same* stream object. `HttpTest` pins it: after
+  `readHead`, the body must still be readable. Verified today: backend log shows
+  `POST / HTTP/1.1  body: abc`.
+- **End-of-stream is only a signal when someone promises to close.** Toward the
+  backend we add `Connection: close`, so `transferTo` on the reply legitimately
+  runs "until EOF". Toward the client we never rely on EOF — the client is waiting
+  for us. Same question, "where does the message end?", answered three ways in one
+  file: blank line (head), `Content-Length` (body), close (backend reply).
+- **`?delay=1500` through the proxy took 1615 ms.** The delay lives in the backend;
+  Switchyard just waited. That ~100 ms of overhead is JVM warm-up plus curl process
+  start — not a number to quote anywhere; see BENCHMARKS.md for how to measure it.
+- **Backend killed → `502 Bad Gateway`, Switchyard survived, restarted backend
+  picked up with no proxy restart.** First real row in FAILURE_MODES.md. Note what
+  was *not* there: no detection, no log line (stderr stayed empty — the
+  `ConnectException` is caught and turned into the 502). Week 4's job.
+- **Lost an hour to a stale process.** Rebuilt, ran the new jar, got the old
+  behaviour. The new instance had died on `BindException: Address already in use`
+  because an earlier Switchyard was still holding 8080 from another terminal, and
+  every curl was being answered by it. Lesson, now a habit:
+  `netstat -ano | findstr :8080` before believing any result.
+- **Near miss in the editor.** `Backend.java` was being hand-written in VS Code
+  (unsaved) while a complete version was written to disk. VS Code kept the dirty
+  buffer; one Ctrl+S would have overwritten the working file with a half-finished
+  one. Editor buffer ≠ disk.
+- **Known limits, left on purpose:** `Transfer-Encoding: chunked` bodies are treated
+  as empty; `Content-Length` is trusted (a huge value would make `readNBytes`
+  allocate it); the forwarded `Host` header still says `localhost:8080`; a client's
+  own `Connection` header would be forwarded alongside ours. Each gets a row or an
+  ADR when it matters.

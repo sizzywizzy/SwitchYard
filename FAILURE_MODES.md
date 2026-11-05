@@ -19,7 +19,7 @@ Reading this file should feel like reading experience.
 
 | Failure | Detected by | While broken | Recovery | Status |
 |---|---|---|---|---|
-| Backend process dies cleanly (`docker stop`) | — | — | — | open (week 4) |
+| Backend process dies cleanly (`docker stop` / Ctrl+C) | **Nothing.** The `ConnectException` on the *next* request is the first sign. No probe, no state, no log line — stderr stayed empty because the exception is caught and turned into the response | Every request to that backend → `502 Bad Gateway` (`backend unavailable`), ~instantly. Switchyard itself keeps running. With one backend that is a 100% error rate | Automatic and immediate: the first request after the backend is listening again succeeds. Switchyard was never restarted | **seen 2026-11-05** (step 3–4 code, one backend). Detection is week 4 |
 | Backend dies mid-request — after receiving, before answering | — | — | — | open (week 4) |
 | Backend hangs — accepts connections, never responds | — | — | — | open (week 4) |
 | Backend slow (`?delay=`) but its `/health` says fine | — | — | — | open (week 4, passive) |
@@ -38,6 +38,7 @@ Reading this file should feel like reading experience.
 | GC pause during load | — | — | — | open (week 6 bench) |
 | Retry storm — retries amplify a slowdown into an outage | — | — | — | open (E2, retry budget) |
 | Thundering herd on a cold cache key | — | — | — | open (E1) |
+| Proxy silently drops request bodies | Nothing — `200 OK` to the client, body never reaches the backend. Found only because the backend was made to *read* bodies, at which point it hung waiting | `POST` data lost with a success status. The worst kind: looks like it worked | Fixed in step 4: byte-level `Http.readHead` + `readNBytes(Content-Length)` on the same stream; `HttpTest` guards it | **seen and fixed 2026-11-05** |
 
 ## Dependency failures
 

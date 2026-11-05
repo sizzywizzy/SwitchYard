@@ -33,3 +33,6 @@ desktop.ini
 
 # Raw benchmark dumps. Summaries go in BENCHMARKS.md, not the raw output.
 bench/results/
+
+# Obsidian workspace state (window layout, recent files). Per-machine, never shared.
+.obsidian/

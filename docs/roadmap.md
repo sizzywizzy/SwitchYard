@@ -8,18 +8,36 @@ Standing rule: **DSA hours are fixed and come first.** This fits into what's lef
 
 Tick a milestone only when it has been *observed*, not when the code compiles.
 
+## Where we are — 2026-11-05
+
+Week 1 code is complete and every behaviour has been observed: listener, thread per
+connection, forwarding with request bodies, `502` on a dead backend, automatic
+recovery. Five tests green. Two things stand between this and the week-1 milestone:
+
+1. **Commit step 4** (`Http.java`, `HttpTest.java`, `Main.java`, `Backend.java`) plus
+   the docs — the only uncommitted work.
+2. **Oracle Cloud** — signup started by you; the always-free ARM tier is often out
+   of capacity in Indian regions, so start now and let it churn. Week 2 deploys to it.
+
+Then week 2, step 1: round robin across three backends.
+
 ## Week 1 — The dumbest proxy that works
 
 Blocking, one thread per connection, one hardcoded backend, bytes copied across.
 Ugly on purpose — it's the baseline everything later gets measured against.
 
 - [x] Maven via the committed wrapper (3.9.16); `pom.xml` written and explained; `./mvnw verify` green locally (2026-10-25)
-- [ ] `JAVA_HOME` → jdk-24 set in your own shell (the wrapper needs it; `java` on PATH is still 11)
-- [ ] `ServerSocket` accepts a connection; the request is printed as raw text
-- [ ] Bytes forwarded to one hardcoded backend and the response copied back
-- [ ] Three tiny backends that return their own name and honour `?delay=`
-- [ ] Oracle Cloud A1 instance provisioned — or a fallback chosen if out of capacity
 - [x] GitHub Actions: build + tests on every push, green (first run green 2026-10-25)
+- [x] `ServerSocket` accepts a connection; the request is printed as raw text (`902ff92`)
+- [x] One thread per connection — the idle-client freeze seen, then gone (`af16ace`)
+- [x] Step 3 observed end to end (2026-11-05): `curl.exe localhost:8080` → `hello from backend-1`, `?delay=2000` took 2123 ms, POST body silently dropped (flaw #3 confirmed)
+- [x] Backend killed → `502 Bad Gateway`, Switchyard still up; backend restarted, next curl works with no proxy restart (observed 2026-11-05)
+- [x] Bytes forwarded to one hardcoded backend and the response copied back (`26dac2e`, observed 2026-11-05)
+- [x] Tiny backend that returns its own name and honours `?delay=` (`Backend.java`; `?delay=1500` observed 2026-11-05 — three instances come with round robin)
+- [x] Request *bodies* survive the proxy: `curl.exe -d "abc"` → backend logged `body: abc` (step 4, observed 2026-11-05; `HttpTest` guards it)
+- [x] `NOTES.md` week-1 entry written from the runs; `FAILURE_MODES.md` first two rows filled (2026-11-05)
+- [x] `JAVA_HOME` → jdk-24 set at user scope (2026-11-05). `java` on PATH is still 11; run the jar with the JDK 24 binary, full path
+- [ ] Oracle Cloud A1 instance provisioned — or a fallback chosen if out of capacity
 
 **Milestone:** `curl localhost:8080` returns "hello from backend-1", CI is green,
 the Oracle box exists.

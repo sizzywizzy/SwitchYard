@@ -4,9 +4,11 @@
 
 A Layer 7 HTTP load balancer, written from scratch in Java.
 
-> **Status: day 0.** Repository skeleton only — no code yet. The plan is in
-> [`docs/roadmap.md`](docs/roadmap.md). This README fills in as each milestone
-> is actually reached, not before.
+> **Status: week 1 code complete (2026-11-05).** A working single-backend proxy:
+> accepts connections, one thread each, forwards request head and body to a
+> backend, relays the response byte for byte, answers `502` when the backend is
+> down. No balancing yet. The plan is in [`docs/roadmap.md`](docs/roadmap.md);
+> this README fills in as each milestone is actually reached, not before.
 
 ## What it does
 
